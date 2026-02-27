@@ -87,7 +87,7 @@ type Acexy struct {
 
 	// Information about ongoing streams
 	streams    map[AceID]*ongoingStream
-	mutex      *sync.Mutex
+	mutex      *sync.RWMutex
 	middleware *http.Client
 }
 
@@ -624,8 +624,8 @@ func CloseStream(stream *AceStream) error {
 // If the stream is not enqueued, an error is returned. The stream is identified by the “id“
 // identifier.
 func (a *Acexy) GetStatus(id *AceID) (AcexyStatus, error) {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
+	a.mutex.RLock()
+	defer a.mutex.RUnlock()
 
 	// Return the global status if no ID is given
 	if id == nil {
