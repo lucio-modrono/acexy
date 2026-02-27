@@ -127,6 +127,7 @@ func (a *Acexy) Init() {
 			ResponseHeaderTimeout: a.NoResponseTimeout,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
+    	Timeout: a.NoResponseTimeout,
 	}
 }
 
@@ -254,7 +255,7 @@ func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
 	}
 	// Check if the stream is already being played
 
-slog.Debug("StartStream 1", "stream", stream.ID, PlaybackURL, stream.PlaybackURL)
+slog.Debug("StartStream 1", "stream", stream.ID, "PlaybackURL", stream.PlaybackURL)
 	resp, err := a.middleware.Get(stream.PlaybackURL)
 	if err != nil {
 		slog.Error("Failed to forward stream", "error", err)
