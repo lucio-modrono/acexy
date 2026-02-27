@@ -102,7 +102,7 @@ const (
 // Initializes the Acexy structure
 func (a *Acexy) Init() {
 	a.streams = make(map[AceID]*ongoingStream)
-	a.mutex = &sync.Mutex{}
+	a.mutex = &sync.RWMutex{}
 	// The transport to be used when connecting to the AceStream middleware. We have to tweak it
 	// a little bit to avoid compression and to limit the number of connections per host. Otherwise,
 	// the AceStream Middleware won't work.
