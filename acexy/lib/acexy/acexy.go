@@ -87,7 +87,7 @@ type Acexy struct {
 
 	// Information about ongoing streams
 	streams    map[AceID]*ongoingStream
-	mutex      *sync.RWMutex
+	mutex      *sync.Mutex
 	middleware *http.Client
 }
 
@@ -102,7 +102,7 @@ const (
 // Initializes the Acexy structure
 func (a *Acexy) Init() {
 	a.streams = make(map[AceID]*ongoingStream)
-	a.mutex = &sync.RWMutex{}
+	a.mutex = &sync.Mutex{}
 	// The transport to be used when connecting to the AceStream middleware. We have to tweak it
 	// a little bit to avoid compression and to limit the number of connections per host. Otherwise,
 	// the AceStream Middleware won't work.
@@ -125,8 +125,8 @@ func (a *Acexy) Init() {
 // The stream is identified by the “id“ identifier. Optionally, takes extra parameters to
 // customize the stream.
 func (a *Acexy) FetchStream(aceId AceID, extraParams url.Values) (*AceStream, error) {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
+	LockResource("FetchStream "+aceId, a)
+	defer UnlockResource("FetchStream "+aceId, a)
 
 	// Check if the stream is already enqueued — instances are untouched, the PMultiWriter handles distribution
 	if stream, ok := a.streams[aceId]; ok {
@@ -200,9 +200,21 @@ func (a *Acexy) FetchStream(aceId AceID, extraParams url.Values) (*AceStream, er
 	return stream, nil
 }
 
-func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
+func LockResource(a *Acexy, String message) error {
+	slog.Debug(message, " - Locking resource")
 	a.mutex.Lock()
-	defer a.mutex.Unlock()
+	slog.Debug(message, " - Resource locked")
+}
+
+func UnlockResource(a *Acexy, String message) error {
+	slog.Debug(message, " - Unlock resource")
+	a.mutex.Unlock()
+	slog.Debug(message, " - Resource unlocked")
+}
+
+func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
+	LockResource("StartStream "+stream.ID, a)
+	defer UnlockResource("StartStream "+stream.ID, a)
 
 	// Get the ongoing stream
 	ongoingStream, ok := a.streams[stream.ID]
@@ -379,12 +391,12 @@ func (a *Acexy) reconnectStream(os *ongoingStream, stream *AceStream) error {
 	}
 
 	os.copier.Source = newResp.Body
-	a.mutex.Lock()
+	LockResource("reconnectStream "+stream.ID, a)
+	defer UnlockResource("reconnectStream "+stream.ID, a)
 	if os.player != nil {
 		_ = os.player.Body.Close()
 	}
 	os.player = newResp
-	a.mutex.Unlock()
 	return nil
 }
 
@@ -472,8 +484,8 @@ func (a *Acexy) releaseStream(stream *AceStream) error {
 // enqueued, an error is returned. If the stream has clients reproducing it, the stream is not
 // removed. The stream is identified by the “id“ identifier.
 func (a *Acexy) StopStream(stream *AceStream, out io.Writer) error {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
+	LockResource("StopStream "+stream.ID, a)
+	defer UnlockResource("StopStream "+stream.ID, a)
 
 	// Get the ongoing stream
 	ongoingStream, ok := a.streams[stream.ID]
@@ -508,8 +520,8 @@ func (a *Acexy) StopStream(stream *AceStream, out io.Writer) error {
 // is not enqueued, nil is returned. The function returns a channel that will be closed when the
 // stream finishes.
 func (a *Acexy) WaitStream(stream *AceStream) <-chan struct{} {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
+	LockResource("WaitStream "+stream.ID, a)
+	defer UnlockResource("WaitStream "+stream.ID, a)
 
 	// Get the ongoing stream
 	ongoingStream, ok := a.streams[stream.ID]
@@ -624,8 +636,8 @@ func CloseStream(stream *AceStream) error {
 // If the stream is not enqueued, an error is returned. The stream is identified by the “id“
 // identifier.
 func (a *Acexy) GetStatus(id *AceID) (AcexyStatus, error) {
-	a.mutex.RLock()
-	defer a.mutex.RUnlock()
+	LockResource("GetStatus", a)
+	defer UnlockResource("GetStatus", a)
 
 	// Return the global status if no ID is given
 	if id == nil {
