@@ -16,15 +16,15 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags "-s -w
 FROM alpine:latest AS final-stage
 
 COPY --from=build-stage /acexy         /acexy
-EXPOSE 8080
-ENV ACEXY_LISTEN_ADDR=":8080"
+EXPOSE 8888
+ENV ACEXY_LISTEN_ADDR=":8888"
 # USER acestream:acestream
 
 # Install curl for healthcheck
 RUN apk add --no-cache curl
 
 # Healthcheck against the HTTP status endpoint
-HEALTHCHECK --interval=10s --timeout=10s --start-period=1s \
+HEALTHCHECK --interval=30s --timeout=20s --start-period=60s --retries=2 \
     CMD curl -qf http://localhost${ACEXY_LISTEN_ADDR}/ace/status || exit 1
 
 ENTRYPOINT [ "/acexy" ]
