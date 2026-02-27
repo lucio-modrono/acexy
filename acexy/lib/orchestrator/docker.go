@@ -59,6 +59,10 @@ func (o *Orchestrator) createContainer(ctx context.Context) (string, string, str
 	hostCfg := &container.HostConfig{
 		Binds:         []string{aceStreamVolumeBind},
 		RestartPolicy: container.RestartPolicy{Name: "no"},
+        Binds: []string{
+            "/etc/localtime:/etc/localtime:ro",
+            "/tmp:/tmp",
+        },
 	}
 
 	netCfg := &network.NetworkingConfig{}
