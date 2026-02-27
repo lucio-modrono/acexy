@@ -23,13 +23,11 @@ func randomHex(n int) string {
 }
 
 const (
-	aceStreamVolumeBind   = []string{
-            					"/etc/localtime:/etc/localtime:ro",
-            					"/tmp:/tmp",
-								"/opt/docker/volumes/localstreams/acestream:/home/localstreams/.ACEStream",
-        					}
-	defaultRegularNetwork = "bridge"
-	vpnContainer          = "gluetun"
+	localtimeVolumeBind    = "/etc/localtime:/etc/localtime:ro"
+	tmpVolumeBind          = "/tmp:/tmp"
+	aceStreamVolumeBind    = "/opt/docker/volumes/localstreams/acestream:/home/localstreams/.ACEStream"
+	defaultRegularNetwork  = "bridge"
+	vpnContainer           = "gluetun"
 )
 
 // containerRemoveOptions returns the standard options for removing containers.
@@ -61,7 +59,11 @@ func (o *Orchestrator) createContainer(ctx context.Context) (string, string, str
 	}
 
 	hostCfg := &container.HostConfig{
-		Binds:         aceStreamVolumeBind,
+		Binds:         []string{
+            					localtimeVolumeBind,
+            					tmpVolumeBind,
+								aceStreamVolumeBind,
+        					},
 		RestartPolicy: container.RestartPolicy{Name: "no"},
 	}
 
