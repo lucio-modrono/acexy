@@ -23,7 +23,11 @@ func randomHex(n int) string {
 }
 
 const (
-	aceStreamVolumeBind   = "/opt/docker/volumes/localstreams/acestream:/home/localstreams/.ACEStream"
+	aceStreamVolumeBind   = []string{
+            					"/etc/localtime:/etc/localtime:ro",
+            					"/tmp:/tmp",
+								"/opt/docker/volumes/localstreams/acestream:/home/localstreams/.ACEStream",
+        					}
 	defaultRegularNetwork = "bridge"
 	vpnContainer          = "gluetun"
 )
@@ -57,12 +61,9 @@ func (o *Orchestrator) createContainer(ctx context.Context) (string, string, str
 	}
 
 	hostCfg := &container.HostConfig{
-		Binds:         []string{aceStreamVolumeBind},
+		Binds:         aceStreamVolumeBind,
 		RestartPolicy: container.RestartPolicy{Name: "no"},
-        Binds: []string{
-            "/etc/localtime:/etc/localtime:ro",
-            "/tmp:/tmp",
-        },
+        Binds: 
 	}
 
 	netCfg := &network.NetworkingConfig{}
