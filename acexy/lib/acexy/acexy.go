@@ -252,7 +252,7 @@ func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
 		slog.Info("Started new stream", "id", stream.ID, "stream_clients", ongoingStream.clients,
 			"total_clients", totalClients)
 	}
-
+slog.Debug("StartStream 1", "stream", stream.ID)
 	// Check if the stream is already being played
 
 	resp, err := a.middleware.Get(stream.PlaybackURL)
@@ -266,6 +266,7 @@ func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
 		}
 		return err
 	}
+slog.Debug("StartStream 2", "stream", stream.ID)
 
 	// Forward the response to the writers
 	idType, id := stream.ID.ID()
@@ -277,9 +278,12 @@ func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
 		StreamID:     string(idType) + ":" + id,
 	}
 
+slog.Debug("StartStream 3", "stream", stream.ID)
 	go a.runStreamLoop(ongoingStream, stream)
 
+slog.Debug("StartStream 4", "stream", stream.ID)
 	ongoingStream.player = resp
+slog.Debug("StartStream 5", "stream", stream.ID)
 	return nil
 }
 
