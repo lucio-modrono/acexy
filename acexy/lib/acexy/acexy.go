@@ -117,9 +117,8 @@ func (a *Acexy) Init() {
 	a.mutex = &sync.Mutex{}
 	var idleTimeout time.Duration
 	if a.Orchestrator != nil {
-		idleTimeout = a.Orchestrator.idleTimeout
-	}
-	if idleTimeout == nil {
+		idleTimeout = a.Orchestrator.Orchestrator.idleTimeout
+	} else {
 		idleTimeout = 30 * time.Second
 	}
 	// The transport to be used when connecting to the AceStream middleware. We have to tweak it
