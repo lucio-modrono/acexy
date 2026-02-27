@@ -99,13 +99,13 @@ const (
 	MPEG_TS_ENDPOINT AcexyEndpoint = "/ace/getstream"
 )
 
-func LockResource(a *Acexy, message String) error {
+func LockResource(a *Acexy, message string) {
 	slog.Debug(message, " - Locking resource")
 	a.mutex.Lock()
 	slog.Debug(message, " - Resource locked")
 }
 
-func UnlockResource(a *Acexy, message String) error {
+func UnlockResource(a *Acexy, message string) {
 	slog.Debug(message, " - Unlock resource")
 	a.mutex.Unlock()
 	slog.Debug(message, " - Resource unlocked")
