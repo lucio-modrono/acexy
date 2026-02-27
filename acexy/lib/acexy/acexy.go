@@ -252,9 +252,9 @@ func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
 		slog.Info("Started new stream", "id", stream.ID, "stream_clients", ongoingStream.clients,
 			"total_clients", totalClients)
 	}
-slog.Debug("StartStream 1", "stream", stream.ID)
 	// Check if the stream is already being played
 
+slog.Debug("StartStream 1", "stream", stream.ID, PlaybackURL, stream.PlaybackURL)
 	resp, err := a.middleware.Get(stream.PlaybackURL)
 	if err != nil {
 		slog.Error("Failed to forward stream", "error", err)
