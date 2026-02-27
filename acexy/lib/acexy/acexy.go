@@ -213,8 +213,8 @@ func (a *Acexy) FetchStream(aceId AceID, extraParams url.Values) (*AceStream, er
 }
 
 func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
-	LockResource(a, "StartStream "+stream.ID)
-	defer UnlockResource(a, "StartStream "+stream.ID)
+	LockResource(a, "StartStream "+stream.ID.String())
+	defer UnlockResource(a, "StartStream "+stream.ID.String())
 
 	// Get the ongoing stream
 	ongoingStream, ok := a.streams[stream.ID]
@@ -391,8 +391,8 @@ func (a *Acexy) reconnectStream(os *ongoingStream, stream *AceStream) error {
 	}
 
 	os.copier.Source = newResp.Body
-	LockResource(a, "reconnectStream "+stream.ID)
-	defer UnlockResource(a, "reconnectStream "+stream.ID)
+	LockResource(a, "reconnectStream "+stream.ID.String())
+	defer UnlockResource(a, "reconnectStream "+stream.ID.String())
 	if os.player != nil {
 		_ = os.player.Body.Close()
 	}
@@ -484,8 +484,8 @@ func (a *Acexy) releaseStream(stream *AceStream) error {
 // enqueued, an error is returned. If the stream has clients reproducing it, the stream is not
 // removed. The stream is identified by the “id“ identifier.
 func (a *Acexy) StopStream(stream *AceStream, out io.Writer) error {
-	LockResource(a, "StopStream "+stream.ID)
-	defer UnlockResource(a, "StopStream "+stream.ID)
+	LockResource(a, "StopStream "+stream.ID.String())
+	defer UnlockResource(a, "StopStream "+stream.ID.String())
 
 	// Get the ongoing stream
 	ongoingStream, ok := a.streams[stream.ID]
@@ -520,8 +520,8 @@ func (a *Acexy) StopStream(stream *AceStream, out io.Writer) error {
 // is not enqueued, nil is returned. The function returns a channel that will be closed when the
 // stream finishes.
 func (a *Acexy) WaitStream(stream *AceStream) <-chan struct{} {
-	LockResource(a, "WaitStream "+stream.ID)
-	defer UnlockResource(a, "WaitStream "+stream.ID)
+	LockResource(a, "WaitStream "+stream.ID.String())
+	defer UnlockResource(a, "WaitStream "+stream.ID.String())
 
 	// Get the ongoing stream
 	ongoingStream, ok := a.streams[stream.ID]
