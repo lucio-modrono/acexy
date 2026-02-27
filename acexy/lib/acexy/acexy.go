@@ -255,7 +255,7 @@ func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
 	}
 	// Check if the stream is already being played
 
-slog.Debug("StartStream 1", "stream", stream.ID, "PlaybackURL", stream.PlaybackURL)
+	slog.Debug("StartStream", "stream", stream.ID, "PlaybackURL", stream.PlaybackURL)
 	resp, err := a.middleware.Get(stream.PlaybackURL)
 	if err != nil {
 		slog.Error("Failed to forward stream", "error", err)
@@ -267,7 +267,6 @@ slog.Debug("StartStream 1", "stream", stream.ID, "PlaybackURL", stream.PlaybackU
 		}
 		return err
 	}
-slog.Debug("StartStream 2", "stream", stream.ID)
 
 	// Forward the response to the writers
 	idType, id := stream.ID.ID()
@@ -279,12 +278,10 @@ slog.Debug("StartStream 2", "stream", stream.ID)
 		StreamID:     string(idType) + ":" + id,
 	}
 
-slog.Debug("StartStream 3", "stream", stream.ID)
 	go a.runStreamLoop(ongoingStream, stream)
 
-slog.Debug("StartStream 4", "stream", stream.ID)
 	ongoingStream.player = resp
-slog.Debug("StartStream 5", "stream", stream.ID)
+
 	return nil
 }
 
