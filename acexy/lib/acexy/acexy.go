@@ -99,6 +99,18 @@ const (
 	MPEG_TS_ENDPOINT AcexyEndpoint = "/ace/getstream"
 )
 
+func LockResource(a *Acexy, String message) error {
+	slog.Debug(message, " - Locking resource")
+	a.mutex.Lock()
+	slog.Debug(message, " - Resource locked")
+}
+
+func UnlockResource(a *Acexy, String message) error {
+	slog.Debug(message, " - Unlock resource")
+	a.mutex.Unlock()
+	slog.Debug(message, " - Resource unlocked")
+}
+
 // Initializes the Acexy structure
 func (a *Acexy) Init() {
 	a.streams = make(map[AceID]*ongoingStream)
@@ -125,8 +137,8 @@ func (a *Acexy) Init() {
 // The stream is identified by the “id“ identifier. Optionally, takes extra parameters to
 // customize the stream.
 func (a *Acexy) FetchStream(aceId AceID, extraParams url.Values) (*AceStream, error) {
-	LockResource("FetchStream "+aceId, a)
-	defer UnlockResource("FetchStream "+aceId, a)
+	LockResource("FetchStream "+aceId.String(), a)
+	defer UnlockResource("FetchStream "+aceId.String(), a)
 
 	// Check if the stream is already enqueued — instances are untouched, the PMultiWriter handles distribution
 	if stream, ok := a.streams[aceId]; ok {
@@ -198,18 +210,6 @@ func (a *Acexy) FetchStream(aceId AceID, extraParams url.Values) (*AceStream, er
 		instance: instance,
 	}
 	return stream, nil
-}
-
-func LockResource(a *Acexy, String message) error {
-	slog.Debug(message, " - Locking resource")
-	a.mutex.Lock()
-	slog.Debug(message, " - Resource locked")
-}
-
-func UnlockResource(a *Acexy, String message) error {
-	slog.Debug(message, " - Unlock resource")
-	a.mutex.Unlock()
-	slog.Debug(message, " - Resource unlocked")
 }
 
 func (a *Acexy) StartStream(stream *AceStream, out io.Writer) error {
