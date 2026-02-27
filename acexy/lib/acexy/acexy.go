@@ -87,7 +87,7 @@ type Acexy struct {
 
 	// Information about ongoing streams
 	streams    map[AceID]*ongoingStream
-	mutex      *sync.Mutex
+	mutex      *sync.RWMutex
 	middleware *http.Client
 }
 
@@ -111,10 +111,22 @@ func UnlockResource(a *Acexy, message string) {
 	slog.Debug(message, " - Resource unlocked")
 }
 
+func RLockResource(a *Acexy, message string) {
+	slog.Debug(message, " - Locking resource (read)")
+	a.mutex.RLock()
+	slog.Debug(message, " - Resource locked (read)")
+}
+
+func RUnlockResource(a *Acexy, message string) {
+	slog.Debug(message, " - Unlock resource (read)")
+	a.mutex.RUnlock()
+	slog.Debug(message, " - Resource unlocked (read)")
+}
+
 // Initializes the Acexy structure
 func (a *Acexy) Init() {
 	a.streams = make(map[AceID]*ongoingStream)
-	a.mutex = &sync.Mutex{}
+	a.mutex = &sync.RWMutex{}
 	var idleTimeout time.Duration
 	if a.Orchestrator != nil {
 		idleTimeout = a.Orchestrator.IdleTimeout
@@ -644,8 +656,8 @@ func CloseStream(stream *AceStream) error {
 // If the stream is not enqueued, an error is returned. The stream is identified by the “id“
 // identifier.
 func (a *Acexy) GetStatus(id *AceID) (AcexyStatus, error) {
-	LockResource(a, "GetStatus")
-	defer UnlockResource(a, "GetStatus")
+	RLockResource(a, "GetStatus")
+	defer RUnlockResource(a, "GetStatus")
 
 	// Return the global status if no ID is given
 	if id == nil {
