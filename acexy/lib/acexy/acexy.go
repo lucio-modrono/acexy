@@ -123,11 +123,11 @@ func (a *Acexy) Init() {
 			DisableCompression:    true,
 			MaxIdleConns:          10,
 			MaxConnsPerHost:       10,
-			IdleConnTimeout:       30 * time.Second,
+			IdleConnTimeout:       a.idleTimeout,
 			ResponseHeaderTimeout: a.NoResponseTimeout,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
-    	Timeout: a.NoResponseTimeout,
+    	Timeout: a.idleTimeout,
 	}
 }
 
