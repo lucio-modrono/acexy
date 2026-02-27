@@ -117,7 +117,7 @@ func (a *Acexy) Init() {
 	a.mutex = &sync.Mutex{}
 	var idleTimeout time.Duration
 	if a.Orchestrator != nil {
-		idleTimeout = a.Orchestrator.Orchestrator.idleTimeout
+		idleTimeout = a.Orchestrator.IdleTimeout
 	} else {
 		idleTimeout = 30 * time.Second
 	}
