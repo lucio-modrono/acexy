@@ -274,7 +274,7 @@ func (o *Orchestrator) removeContainer(ctx context.Context, containerID string) 
 			slog.Warn("Failed to remove idle instance", "containerID", containerID[:12], "error", err)
 		}
 	}
-	if err == nil && _, ok := myMap["key"]; ok {
+	if err == nil && _, ok := o.instances[containerID]; ok {
 		delete(o.instances, containerID)
 	}
 	return err
