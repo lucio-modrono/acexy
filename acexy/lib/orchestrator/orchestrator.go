@@ -342,7 +342,7 @@ func (o *Orchestrator) scaleDownIdle() {
 		slog.Info("Scaling down idle instance", "name", instance.Name,
 			"idleSince", instance.LastActivity)
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		_ := o.removeContainer(ctx, id)
+		o.removeContainer(ctx, id)
 		cancel()
 	}
 }
@@ -383,7 +383,7 @@ func (o *Orchestrator) recycleIfIdle() {
 	defer cancel()
 	for id, inst := range o.instances {
 		slog.Info("Recycling instance", "name", inst.Name)
-		_ := o.removeContainer(ctx, id)
+		o.removeContainer(ctx, id)
 	}
 	// Reset lastPoolActivity before unlocking so that the recycle check does not
 	// fire again immediately while ScaleUp is still running.
@@ -415,7 +415,7 @@ func (o *Orchestrator) Shutdown() {
 	slog.Info("Shutting down orchestrator, removing all instances", "count", len(o.instances))
 	for id, instance := range o.instances {
 		slog.Info("Removing instance", "name", instance.Name, "host", instance.Host)
-		_ := o.removeContainer(ctx, id)
+		o.removeContainer(ctx, id)
 	}
 	slog.Info("Orchestrator shutdown complete")
 }
