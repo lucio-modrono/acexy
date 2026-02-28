@@ -266,9 +266,14 @@ func (o *Orchestrator) waitForHealthy(instance *AceStreamInstance) error {
 	return fmt.Errorf("timeout waiting for instance %s to become healthy", instance.ContainerID)
 }
 
-// removeContainer removes a container (used for cleanup after an error).
+// removeContainer removes a container from docker stack and map of current instances.
 func (o *Orchestrator) removeContainer(ctx context.Context, containerID string) error {
-	return o.dockerClient.ContainerRemove(ctx, containerID, containerRemoveOptions())
+	if err := o.dockerClient.ContainerRemove(ctx, containerID, containerRemoveOptions()); err != nil {
+		slog.Warn("Failed to remove idle instance", "containerID", containerID[:12], "error", err)
+	} else if _, ok := myMap["key"]; ok {
+		delete(o.instances, containerID)
+	}
+	return err
 }
 
 // TouchPoolActivity updates the last activity timestamp of the pool and resets the recycled flag.
@@ -331,11 +336,7 @@ func (o *Orchestrator) scaleDownIdle() {
 		slog.Info("Scaling down idle instance", "name", instance.Name,
 			"idleSince", instance.LastActivity)
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		if err := o.dockerClient.ContainerRemove(ctx, id, containerRemoveOptions()); err != nil {
-			slog.Warn("Failed to remove idle instance", "containerID", id[:12], "error", err)
-		} else {
-			delete(o.instances, id)
-		}
+		err := removeContainer(ctx, id)
 		cancel()
 	}
 }
@@ -376,11 +377,7 @@ func (o *Orchestrator) recycleIfIdle() {
 	defer cancel()
 	for id, inst := range o.instances {
 		slog.Info("Recycling instance", "name", inst.Name)
-		if err := o.dockerClient.ContainerRemove(ctx, id, containerRemoveOptions()); err != nil {
-			slog.Warn("Failed to remove instance during recycle", "name", inst.Name, "error", err)
-		} else {
-			delete(o.instances, id)
-		}
+		err := removeContainer(ctx, id)
 	}
 	// Reset lastPoolActivity before unlocking so that the recycle check does not
 	// fire again immediately while ScaleUp is still running.
@@ -412,11 +409,7 @@ func (o *Orchestrator) Shutdown() {
 	slog.Info("Shutting down orchestrator, removing all instances", "count", len(o.instances))
 	for id, instance := range o.instances {
 		slog.Info("Removing instance", "name", instance.Name, "host", instance.Host)
-		if err := o.dockerClient.ContainerRemove(ctx, id, containerRemoveOptions()); err != nil {
-			slog.Warn("Failed to remove instance", "containerID", id[:12], "error", err)
-		} else {
-			delete(o.instances, id)
-		}
+		err := removeContainer(ctx, id)
 	}
 	slog.Info("Orchestrator shutdown complete")
 }
