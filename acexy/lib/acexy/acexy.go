@@ -127,12 +127,6 @@ func RUnlockResource(a *Acexy, message string) {
 func (a *Acexy) Init() {
 	a.streams = make(map[AceID]*ongoingStream)
 	a.mutex = &sync.RWMutex{}
-	var idleTimeout time.Duration
-	if a.Orchestrator != nil {
-		idleTimeout = a.Orchestrator.IdleTimeout
-	} else {
-		idleTimeout = 30 * time.Second
-	}
 	// The transport to be used when connecting to the AceStream middleware. We have to tweak it
 	// a little bit to avoid compression and to limit the number of connections per host. Otherwise,
 	// the AceStream Middleware won't work.
@@ -141,11 +135,11 @@ func (a *Acexy) Init() {
 			DisableCompression:    true,
 			MaxIdleConns:          10,
 			MaxConnsPerHost:       10,
-			IdleConnTimeout:       idleTimeout,
+			IdleConnTimeout:       a.EmptyTimeout,
 			ResponseHeaderTimeout: a.NoResponseTimeout,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
-    	Timeout: idleTimeout,
+    	Timeout: a.EmptyTimeout,
 	}
 }
 
