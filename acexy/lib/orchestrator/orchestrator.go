@@ -268,9 +268,13 @@ func (o *Orchestrator) waitForHealthy(instance *AceStreamInstance) error {
 
 // removeContainer removes a container from docker stack and map of current instances.
 func (o *Orchestrator) removeContainer(ctx context.Context, containerID string) error {
-	if err := o.dockerClient.ContainerRemove(ctx, containerID, containerRemoveOptions()); err != nil {
-		slog.Warn("Failed to remove idle instance", "containerID", containerID[:12], "error", err)
-	} else if _, ok := myMap["key"]; ok {
+	err := nil
+	if containerExists(ctx, containerID) {
+		if err := o.dockerClient.ContainerRemove(ctx, containerID, containerRemoveOptions()); err != nil {
+			slog.Warn("Failed to remove idle instance", "containerID", containerID[:12], "error", err)
+		}
+	}
+	if err == nil && _, ok := myMap["key"]; ok {
 		delete(o.instances, containerID)
 	}
 	return err
