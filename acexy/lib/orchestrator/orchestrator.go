@@ -378,8 +378,9 @@ func (o *Orchestrator) recycleIfIdle() {
 		slog.Info("Recycling instance", "name", inst.Name)
 		if err := o.dockerClient.ContainerRemove(ctx, id, containerRemoveOptions()); err != nil {
 			slog.Warn("Failed to remove instance during recycle", "name", inst.Name, "error", err)
+		} else {
+			delete(o.instances, id)
 		}
-		delete(o.instances, id)
 	}
 	// Reset lastPoolActivity before unlocking so that the recycle check does not
 	// fire again immediately while ScaleUp is still running.
@@ -413,8 +414,9 @@ func (o *Orchestrator) Shutdown() {
 		slog.Info("Removing instance", "name", instance.Name, "host", instance.Host)
 		if err := o.dockerClient.ContainerRemove(ctx, id, containerRemoveOptions()); err != nil {
 			slog.Warn("Failed to remove instance", "containerID", id[:12], "error", err)
+		} else {
+			delete(o.instances, id)
 		}
-		delete(o.instances, id)
 	}
 	slog.Info("Orchestrator shutdown complete")
 }
