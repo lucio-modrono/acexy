@@ -268,7 +268,7 @@ func (o *Orchestrator) waitForHealthy(instance *AceStreamInstance) error {
 
 // removeContainer removes a container from docker stack and map of current instances.
 func (o *Orchestrator) removeContainer(ctx context.Context, containerID string) error {
-	err error
+	var err error
 	if o.containerExists(ctx, containerID) {
 		if err := o.dockerClient.ContainerRemove(ctx, containerID, containerRemoveOptions()); err != nil {
 			slog.Warn("Failed to remove idle instance", "containerID", containerID[:12], "error", err)
@@ -342,7 +342,7 @@ func (o *Orchestrator) scaleDownIdle() {
 		slog.Info("Scaling down idle instance", "name", instance.Name,
 			"idleSince", instance.LastActivity)
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		err := o.removeContainer(ctx, id)
+		_ := o.removeContainer(ctx, id)
 		cancel()
 	}
 }
@@ -383,7 +383,7 @@ func (o *Orchestrator) recycleIfIdle() {
 	defer cancel()
 	for id, inst := range o.instances {
 		slog.Info("Recycling instance", "name", inst.Name)
-		err := o.removeContainer(ctx, id)
+		_ := o.removeContainer(ctx, id)
 	}
 	// Reset lastPoolActivity before unlocking so that the recycle check does not
 	// fire again immediately while ScaleUp is still running.
@@ -415,7 +415,7 @@ func (o *Orchestrator) Shutdown() {
 	slog.Info("Shutting down orchestrator, removing all instances", "count", len(o.instances))
 	for id, instance := range o.instances {
 		slog.Info("Removing instance", "name", instance.Name, "host", instance.Host)
-		err := o.removeContainer(ctx, id)
+		_ := o.removeContainer(ctx, id)
 	}
 	slog.Info("Orchestrator shutdown complete")
 }
