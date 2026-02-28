@@ -139,7 +139,7 @@ func (a *Acexy) Init() {
 			ResponseHeaderTimeout: a.NoResponseTimeout,
 			ExpectContinueTimeout: 1 * time.Second,
 		},
-    	Timeout: a.EmptyTimeout,
+    	//Timeout: a.EmptyTimeout,
 	}
 }
 
