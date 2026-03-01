@@ -311,7 +311,6 @@ func (o *Orchestrator) removeContainer(ctx context.Context, containerID string) 
 // Must be called from acexy.go whenever a new stream is assigned to any instance.
 func (o *Orchestrator) TouchPoolActivity() {
 	LockOrchestrator(o, "TouchPoolActivity")
-	o.instances[containerID] = instance
 	o.lastPoolActivity = time.Now()
 	o.recycled = false
 	UnlockOrchestrator(o, "TouchPoolActivity")
