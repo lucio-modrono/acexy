@@ -69,6 +69,30 @@ type Orchestrator struct {
 	StreamFailureThreshold    int    // consecutive times all streams stall before marking Unhealthy
 }
 
+func LockOrchestrator(o *Orchestrator, message string) {
+	slog.Debug(message, " - Locking Orchestrator")
+	o.mutex.Lock()
+	slog.Debug(message, " - Orchestrator locked")
+}
+
+func UnlockOrchestrator(o *Orchestrator, message string) {
+	slog.Debug(message, " - Unlocking Orchestrator")
+	o.mutex.Unlock()
+	slog.Debug(message, " - Orchestrator unlocked")
+}
+
+func RLockOrchestrator(o *Orchestrator, message string) {
+	slog.Debug(message, " - Locking Orchestrator (read)")
+	o.mutex.RLock()
+	slog.Debug(message, " - Acexy Orchestrator (read)")
+}
+
+func RUnlockOrchestrator(o *Orchestrator, message string) {
+	slog.Debug(message, " - Unlocking Orchestrator (read)")
+	o.mutex.RUnlock()
+	slog.Debug(message, " - Orchestrator unlocked (read)")
+}
+
 // Init initializes the Orchestrator, connects to Docker and starts minReplicas instances.
 func (o *Orchestrator) Init() error {
 	// Copy exported fields to internal ones
