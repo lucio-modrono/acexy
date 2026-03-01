@@ -25,6 +25,6 @@ RUN apk add --no-cache curl
 
 # Healthcheck against the HTTP status endpoint
 HEALTHCHECK --interval=30s --timeout=20s --start-period=60s --retries=2 \
-    CMD curl -qf http://localhost${ACEXY_LISTEN_ADDR}/ace/status || exit 1
+    CMD curl -s -f http://localhost${ACEXY_LISTEN_ADDR}/ace/status || exit 1
 
 ENTRYPOINT [ "/acexy" ]
