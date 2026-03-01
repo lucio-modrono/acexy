@@ -22,12 +22,12 @@ func (o *Orchestrator) MonitorLoop() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		o.mutex.RLock()
+		o.RLockOrchestrator(o, "MonitorLoop)
 		instances := make([]*AceStreamInstance, 0, len(o.instances))
 		for _, inst := range o.instances {
 			instances = append(instances, inst)
 		}
-		o.mutex.RUnlock()
+		o.RUnlockOrchestrator(o, "MonitorLoop)
 
 		for _, inst := range instances {
 			o.monitorInstance(inst)
@@ -117,8 +117,8 @@ func (o *Orchestrator) checkStreamHealth(inst *AceStreamInstance) bool {
 // It only increments the counter when ActiveStreams > 0, distinguishing a stream that
 // failed during playback (instance problem) from an invalid ID that never started.
 func (o *Orchestrator) MarkStreamStalled(inst *AceStreamInstance) {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
+	o.LockOrchestrator(o, "MarkStreamStalled "+inst.Name)
+	defer o.UnlockOrchestrator(o, "MarkStreamStalled "+inst.Name)
 
 	if inst.ActiveStreams == 0 {
 		// The stream never started correctly — invalid ID or earlier error
@@ -137,8 +137,8 @@ func (o *Orchestrator) MarkStreamStalled(inst *AceStreamInstance) {
 // Should be called when a stream reconnects successfully, indicating the instance
 // is working correctly again.
 func (o *Orchestrator) ResetStreamFailures(inst *AceStreamInstance) {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
+	o.LockOrchestrator(o, "ResetStreamFailures "+inst.Name)
+	defer o.UnlockOrchestrator(o, "ResetStreamFailures "+inst.Name)
 
 	if inst.StreamFailureCount > 0 {
 		slog.Debug("Resetting stream failure count for instance", "name", inst.Name)
@@ -149,10 +149,10 @@ func (o *Orchestrator) ResetStreamFailures(inst *AceStreamInstance) {
 // killAndReplace removes an unhealthy instance from the pool and creates a replacement
 // if needed to maintain minReplicas.
 func (o *Orchestrator) killAndReplace(inst *AceStreamInstance) {
-	o.mutex.Lock()
+	o.LockOrchestrator(o, "killAndReplace "+inst.Name)
 	delete(o.instances, inst.ContainerID)
 	remaining := len(o.instances)
-	o.mutex.Unlock()
+	o.UnlockOrchestrator(o, "killAndReplace "+inst.Name)
 
 	slog.Info("Killing unhealthy instance", "name", inst.Name, "remaining", remaining)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
