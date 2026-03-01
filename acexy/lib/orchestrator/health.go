@@ -22,12 +22,12 @@ func (o *Orchestrator) MonitorLoop() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		o.RLockOrchestrator(o, "MonitorLoop)
+		o.RLockOrchestrator(o, "MonitorLoop")
 		instances := make([]*AceStreamInstance, 0, len(o.instances))
 		for _, inst := range o.instances {
 			instances = append(instances, inst)
 		}
-		o.RUnlockOrchestrator(o, "MonitorLoop)
+		o.RUnlockOrchestrator(o, "MonitorLoop")
 
 		for _, inst := range instances {
 			o.monitorInstance(inst)
