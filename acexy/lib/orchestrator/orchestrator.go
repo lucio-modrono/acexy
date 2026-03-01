@@ -84,7 +84,7 @@ func UnlockOrchestrator(o *Orchestrator, message string) {
 func RLockOrchestrator(o *Orchestrator, message string) {
 	slog.Debug(message, " - Locking Orchestrator (read)")
 	o.mutex.RLock()
-	slog.Debug(message, " - Acexy Orchestrator (read)")
+	slog.Debug(message, " - Orchestrator locked (read)")
 }
 
 func RUnlockOrchestrator(o *Orchestrator, message string) {
@@ -162,25 +162,26 @@ func (o *Orchestrator) Init() error {
 	// timeout starts counting from when the pool is actually available, not from
 	// when Init() was called.
 	// Mark as recycled so the pool is not recycled until the first real stream arrives.
-	o.mutex.Lock()
+	
+	LockOrchestrator(o, "Init lastPoolActivity")
 	o.lastPoolActivity = time.Now()
 	o.recycled = true
-	o.mutex.Unlock()
-
+	UnlockOrchestrator(o, "Init lastPoolActivity")
+	
 	return nil
 }
 
 // TotalInstances returns the number of active instances in the pool.
 func (o *Orchestrator) TotalInstances() int {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
+	RLockOrchestrator(o, "TotalInstances")
+	defer RUnlockOrchestrator(o, "TotalInstances")
 	return len(o.instances)
 }
 
 // IsRecycling returns true if the pool has been recycled and is waiting for a new stream.
 func (o *Orchestrator) IsRecycling() bool {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
+	RLockOrchestrator(o, "IsRecycling")
+	defer RUnlockOrchestrator(o, "IsRecycling")
 	return o.recycled
 }
 
@@ -203,8 +204,8 @@ func (o *Orchestrator) WaitForInstance(timeout time.Duration) *AceStreamInstance
 // - Prefers the instance with the most active streams (bin-packing strategy)
 // Returns nil if no instance is available.
 func (o *Orchestrator) SelectInstance() *AceStreamInstance {
-	o.mutex.RLock()
-	defer o.mutex.RUnlock()
+	RLockOrchestrator(o, "SelectInstance")
+	defer RUnlockOrchestrator(o, "SelectInstance")
 
 	var best *AceStreamInstance
 	for _, inst := range o.instances {
@@ -256,9 +257,9 @@ func (o *Orchestrator) ScaleUp() (*AceStreamInstance, error) {
 	instance.Health = Healthy
 	instance.LastCheck = time.Now()
 
-	o.mutex.Lock()
+	LockOrchestrator(o, "ScaleUp instance "+containerID)
 	o.instances[containerID] = instance
-	o.mutex.Unlock()
+	UnlockOrchestrator(o, "ScaleUp instance "+containerID)
 
 	slog.Info("New instance ready", "name", containerName, "host", host, "port", aceStreamPort)
 	return instance, nil
@@ -309,10 +310,11 @@ func (o *Orchestrator) removeContainer(ctx context.Context, containerID string) 
 // TouchPoolActivity updates the last activity timestamp of the pool and resets the recycled flag.
 // Must be called from acexy.go whenever a new stream is assigned to any instance.
 func (o *Orchestrator) TouchPoolActivity() {
-	o.mutex.Lock()
+	LockOrchestrator(o, "TouchPoolActivity")
+	o.instances[containerID] = instance
 	o.lastPoolActivity = time.Now()
 	o.recycled = false
-	o.mutex.Unlock()
+	UnlockOrchestrator(o, "TouchPoolActivity")
 }
 
 // totalActiveStreams returns the sum of active streams across all instances.
@@ -350,8 +352,8 @@ func (o *Orchestrator) ScaleDownLoop() {
 // scaleDownIdle removes instances that have been idle longer than IdleTimeout,
 // as long as the pool stays above minReplicas.
 func (o *Orchestrator) scaleDownIdle() {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
+	LockOrchestrator(o, "scaleDownIdle")
+	defer UnlockOrchestrator(o, "scaleDownIdle")
 
 	for id, instance := range o.instances {
 		if instance.ActiveStreams > 0 {
@@ -380,11 +382,11 @@ func (o *Orchestrator) recycleIfIdle() {
 		return
 	}
 
-	o.mutex.RLock()
+	RLockOrchestrator(o, "recycleIfIdle")
 	activeStreams := o.totalActiveStreams()
 	idleSince := o.lastPoolActivity
 	alreadyRecycled := o.recycled
-	o.mutex.RUnlock()
+	RUnlockOrchestrator(o, "recycleIfIdle")
 
 	if alreadyRecycled {
 		return
@@ -402,7 +404,7 @@ func (o *Orchestrator) recycleIfIdle() {
 	)
 
 	// Remove all current instances
-	o.mutex.Lock()
+	LockOrchestrator(o, "recycleIfIdle removing containers")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	for id, inst := range o.instances {
@@ -412,7 +414,7 @@ func (o *Orchestrator) recycleIfIdle() {
 	// Reset lastPoolActivity before unlocking so that the recycle check does not
 	// fire again immediately while ScaleUp is still running.
 	o.lastPoolActivity = time.Now()
-	o.mutex.Unlock()
+	UnlockOrchestrator(o, "recycleIfIdle removing containers")
 
 	// Start fresh minReplicas instances
 	for i := 0; i < o.minReplicas; i++ {
@@ -422,16 +424,16 @@ func (o *Orchestrator) recycleIfIdle() {
 	}
 
 	// Mark as recycled so the pool is not recycled again until a new stream arrives.
-	o.mutex.Lock()
+	LockOrchestrator(o, "recycleIfIdle removed containers lastPoolActivity")
 	o.recycled = true
 	o.lastPoolActivity = time.Now()
-	o.mutex.Unlock()
+	UnlockOrchestrator(o, "recycleIfIdle removed containers lastPoolActivity")
 }
 
 // Shutdown removes all containers in the pool in an orderly fashion.
 func (o *Orchestrator) Shutdown() {
-	o.mutex.Lock()
-	defer o.mutex.Unlock()
+	LockOrchestrator(o, "Shutdown")
+	defer UnlockOrchestrator(o, "Shutdown")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
