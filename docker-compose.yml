@@ -7,7 +7,7 @@ services:
     container_name: acexy-orchestrator
     restart: unless-stopped
     ports:
-      - "8080:8080/tcp"
+      - "8888:8888/tcp"
     environment:
       # Acexy core config
       ACEXY_LISTEN_ADDR: ":8888"
