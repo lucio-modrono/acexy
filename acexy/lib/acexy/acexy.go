@@ -559,7 +559,7 @@ func GetStream(a *Acexy, aceId AceID, extraParams url.Values) (*AceStreamMiddlew
 func GetStreamFromInstance(instance *orchestrator.AceStreamInstance, a *Acexy, aceId AceID, extraParams url.Values) (*AceStreamMiddleware, error) {
     host := a.Host
 	port := strconv.Itoa(a.Port)
-	if os.instance != nil {
+	if instance != nil {
 		host := instance.Host
 		port := strconv.Itoa(instance.Port)
 	}
