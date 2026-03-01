@@ -560,8 +560,8 @@ func GetStreamFromInstance(instance *orchestrator.AceStreamInstance, a *Acexy, a
     host := a.Host
 	port := strconv.Itoa(a.Port)
 	if instance != nil {
-		host := instance.Host
-		port := strconv.Itoa(instance.Port)
+		host = instance.Host
+		port = strconv.Itoa(instance.Port)
 	}
 
 	slog.Debug("Getting stream", "id", aceId, "extraParams", extraParams)
