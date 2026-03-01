@@ -551,9 +551,22 @@ func (a *Acexy) WaitStream(stream *AceStream) <-chan struct{} {
 // Returns the response from the AceStream backend. If the request fails, an error is returned.
 // If the `AceStreamMiddleware:error` field is not empty, an error is returned.
 func GetStream(a *Acexy, aceId AceID, extraParams url.Values) (*AceStreamMiddleware, error) {
+	return GetStreamFromInstance(nil, aceId, extraParams)
+}
+
+// GetStreamFromInstance performs a stream request against a specific instance in the pool.
+// It is equivalent to GetStream but uses the instance host/port instead of the static backend.
+func GetStreamFromInstance(instance *orchestrator.AceStreamInstance, a *Acexy, aceId AceID, extraParams url.Values) (*AceStreamMiddleware, error) {
+    host := a.Host
+	port := strconv.Itoa(a.Port)
+	if os.instance != nil {
+		host := instance.Host
+		port := strconv.Itoa(instance.Port)
+	}
+
 	slog.Debug("Getting stream", "id", aceId, "extraParams", extraParams)
-	slog.Debug("Acexy Information", "scheme", a.Scheme, "host", a.Host, "port", a.Port)
-	req, err := http.NewRequest("GET", a.Scheme+"://"+a.Host+":"+strconv.Itoa(a.Port)+string(a.Endpoint), nil)
+	slog.Debug("Acexy Information", "scheme", a.Scheme, "host", host, "port", port)
+	req, err := http.NewRequest("GET", a.Scheme+"://"+host+":"+port+string(a.Endpoint), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -668,52 +681,6 @@ func (a *Acexy) GetStatus(id *AceID) (AcexyStatus, error) {
 	}
 
 	return AcexyStatus{}, fmt.Errorf(`stream "%s" not found`, id)
-}
-
-// GetStreamFromInstance performs a stream request against a specific instance in the pool.
-// It is equivalent to GetStream but uses the instance host/port instead of the static backend.
-func GetStreamFromInstance(instance *orchestrator.AceStreamInstance, a *Acexy, aceId AceID, extraParams url.Values) (*AceStreamMiddleware, error) {
-	slog.Debug("Getting stream from instance", "id", aceId, "host", instance.Host, "port", instance.Port)
-
-	req, err := http.NewRequest("GET", a.Scheme+"://"+instance.Host+":"+strconv.Itoa(instance.Port)+string(a.Endpoint), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	pid := uuid.NewString()
-	slog.Debug("Temporary PID", "pid", pid, "stream", aceId)
-	if extraParams == nil {
-		extraParams = req.URL.Query()
-	}
-	idType, id := aceId.ID()
-	extraParams.Set(string(idType), id)
-	extraParams.Set("format", "json")
-	extraParams.Set("pid", pid)
-	req.Header.Set("Content-Type", "application/json")
-	req.URL.RawQuery = extraParams.Encode()
-
-	slog.Debug("Request URL", "url", req.URL.String())
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var response AceStreamMiddleware
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, err
-	}
-
-	if response.Error != "" {
-		return nil, errors.New(response.Error)
-	}
-	return &response, nil
 }
 
 // Creates a timeout channel that will be closed after the given timeout
