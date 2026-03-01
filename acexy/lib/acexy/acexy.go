@@ -588,7 +588,9 @@ func GetStreamFromInstance(instance *orchestrator.AceStreamInstance, a *Acexy, a
 	req.URL.RawQuery = extraParams.Encode()
 
 	slog.Debug("Request URL", "url", req.URL.String())
-	client := &http.Client{}
+	client := &http.Client{
+				Timeout: a.NoResponseTimeout,
+	}
 	res, err := client.Do(req)
 	if err != nil {
 		slog.Debug("Error getting stream", "error", err)
