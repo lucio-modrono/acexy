@@ -551,7 +551,7 @@ func (a *Acexy) WaitStream(stream *AceStream) <-chan struct{} {
 // Returns the response from the AceStream backend. If the request fails, an error is returned.
 // If the `AceStreamMiddleware:error` field is not empty, an error is returned.
 func GetStream(a *Acexy, aceId AceID, extraParams url.Values) (*AceStreamMiddleware, error) {
-	return GetStreamFromInstance(nil, aceId, extraParams)
+	return GetStreamFromInstance(nil, a, aceId, extraParams)
 }
 
 // GetStreamFromInstance performs a stream request against a specific instance in the pool.
