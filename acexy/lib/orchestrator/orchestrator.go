@@ -434,7 +434,7 @@ func (o *Orchestrator) Shutdown() {
 	LockOrchestrator(o, "Shutdown")
 	defer UnlockOrchestrator(o, "Shutdown")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*len(o.instances)*time.Second)
 	defer cancel()
 
 	slog.Info("Shutting down orchestrator, removing all instances", "count", len(o.instances))
