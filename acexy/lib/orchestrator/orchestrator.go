@@ -356,9 +356,9 @@ func (o *Orchestrator) removeUnlinkedInstances() {
 		for _, c := range containers {
 			containerID:=c.ID[:10]
 			if _, ok := o.instances[containerID]; !ok {
-				ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
-				slog.Info("Removing unlinked instance", "name", c.Names)
-				o.removeContainer(ctx, containerID)
+				//ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+				slog.Info("Removing unlinked instance", "name", c.Names, "ID", containerID)
+				//o.removeContainer(ctx, containerID)
 				cancel()
 			}
 		}
