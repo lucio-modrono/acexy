@@ -159,6 +159,28 @@ func (o *Orchestrator) getContainerHost(ctx context.Context, containerID string)
 	return "", fmt.Errorf("could not determine IP for container %s", containerID[:12])
 }
 
+// getContainerList returns the list of containers created in this docker network using the configured image.
+func (o *Orchestrator) getNotLinkedContainerList(ctx context.Context) ([]container.Summary, error) {
+	net := o.ContainerNetwork
+	if net == "" {
+		net = defaultRegularNetwork
+	}
+
+	f := filters.NewArgs()
+	f.Add("name", "acestream-")
+	f.Add("network", net)
+	f.Add("ancestor", o.image)
+	
+	containers, err := o.dockerClient.ContainerList(ctx, container.ListOptions{
+		All:     true,
+		Filters: f,
+	})
+	if err != nil {
+		return "", "", "", fmt.Errorf("getContainerList: failed to recover container list: %w", err)
+	}
+	return containers, err
+}
+
 // pullImageIfNeeded checks whether the image is available locally and pulls it if not.
 func (o *Orchestrator) pullImageIfNeeded(ctx context.Context) error {
 	images, err := o.dockerClient.ImageList(ctx, image.ListOptions{})
