@@ -358,7 +358,7 @@ func (o *Orchestrator) scaleDownIdle() {
 	containers, err := o.getContainerList(ctx)
 	for _, c := range containers {
 		fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
-		containerID=c.ID[:10]
+		containerID:=c.ID[:10]
 		if _, ok := o.instances[containerID]; !ok {
 			o.removeContainer(ctx, containerID)
 		}
@@ -456,7 +456,7 @@ func (o *Orchestrator) Shutdown() {
 	containers, err := o.getContainerList(ctx)
 	for _, c := range containers {
 		fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
-		containerID=c.ID[:10]
+		containerID:=c.ID[:10]
 		if _, ok := o.instances[containerID]; !ok {
 			o.removeContainer(ctx, containerID)
 		}
