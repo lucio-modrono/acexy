@@ -177,9 +177,6 @@ func (o *Orchestrator) getContainerList(ctx context.Context) ([]container.Summar
 		All:     true,
 		Filters: f,
 	})
-	if err != nil {
-		return _, fmt.Errorf("getContainerList: failed to recover container list: %w", err)
-	}
 	return containers, err
 }
 
