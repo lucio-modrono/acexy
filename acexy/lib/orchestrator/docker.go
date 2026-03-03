@@ -160,7 +160,7 @@ func (o *Orchestrator) getContainerHost(ctx context.Context, containerID string)
 }
 
 // getContainerList returns the list of containers created in this docker network using the configured image.
-func (o *Orchestrator) getNotLinkedContainerList(ctx context.Context) ([]container.Summary, error) {
+func (o *Orchestrator) getContainerList(ctx context.Context) ([]container.Summary, error) {
 	net := o.ContainerNetwork
 	if net == "" {
 		net = defaultRegularNetwork
