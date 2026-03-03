@@ -412,7 +412,7 @@ func (o *Orchestrator) recycleIfIdle() {
 
 	// Remove all current instances
 	LockOrchestrator(o, "recycleIfIdle removing containers")
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 45 * time.Duration(len(o.instances)) * time.Second)
 	defer cancel()
 	for id, inst := range o.instances {
 		slog.Info("Recycling instance", "name", inst.Name)
@@ -442,7 +442,7 @@ func (o *Orchestrator) Shutdown() {
 	LockOrchestrator(o, "Shutdown")
 	defer UnlockOrchestrator(o, "Shutdown")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Duration(len(o.instances)) * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 45 * time.Duration(len(o.instances)) * time.Second)
 	defer cancel()
 
 	slog.Info("Shutting down orchestrator, removing all instances", "count", len(o.instances))
