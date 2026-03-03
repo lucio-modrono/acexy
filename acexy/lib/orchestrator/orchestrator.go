@@ -362,6 +362,16 @@ func (o *Orchestrator) scaleDownIdle() {
 	LockOrchestrator(o, "scaleDownIdle", false)
 	defer UnlockOrchestrator(o, "scaleDownIdle", false)
 
+	// Remove unlinked docker instances if exists
+	containers, err := o.getContainerList(ctx)
+	for _, c := range containers {
+		fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
+		containerID=c.ID[:10]
+		if _, ok := o.instances[containerID]; !ok {
+			o.removeContainer(ctx, containerID)
+		}
+	}
+
 	for id, instance := range o.instances {
 		if instance.ActiveStreams > 0 {
 			continue
@@ -449,6 +459,15 @@ func (o *Orchestrator) Shutdown() {
 	for id, instance := range o.instances {
 		slog.Info("Removing instance", "name", instance.Name, "host", instance.Host)
 		o.removeContainer(ctx, id)
+	}
+	// Remove unlinked docker instances if exists
+	containers, err := o.getContainerList(ctx)
+	for _, c := range containers {
+		fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
+		containerID=c.ID[:10]
+		if _, ok := o.instances[containerID]; !ok {
+			o.removeContainer(ctx, containerID)
+		}
 	}
 	slog.Info("Orchestrator shutdown complete")
 }
