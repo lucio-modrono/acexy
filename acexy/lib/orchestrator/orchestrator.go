@@ -70,23 +70,15 @@ type Orchestrator struct {
 }
 
 func LockOrchestrator(o *Orchestrator, message string) {
-	LockOrchestrator(o, message, true)
-}
-
-func LockOrchestrator(o *Orchestrator, message string, debug bool) {
-	if debug { slog.Debug(message, " - Locking Orchestrator") }
+	slog.Debug(message, " - Locking Orchestrator")
 	o.mutex.Lock()
-	if debug { slog.Debug(message, " - Orchestrator locked") }
+	slog.Debug(message, " - Orchestrator locked")
 }
 
 func UnlockOrchestrator(o *Orchestrator, message string) {
-	UnlockOrchestrator(o, message, true)
-}
-
-func UnlockOrchestrator(o *Orchestrator, message string, debug bool) {
-	if debug { slog.Debug(message, " - Unlocking Orchestrator") }
+	slog.Debug(message, " - Unlocking Orchestrator")
 	o.mutex.Unlock()
-	if debug { slog.Debug(message, " - Orchestrator unlocked") }
+	slog.Debug(message, " - Orchestrator unlocked")
 }
 
 func RLockOrchestrator(o *Orchestrator, message string) {
