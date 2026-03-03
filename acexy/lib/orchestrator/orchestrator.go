@@ -348,14 +348,11 @@ func (o *Orchestrator) ScaleDownLoop() {
 	}
 }
 
-// scaleDownIdle removes instances that have been idle longer than IdleTimeout,
-// as long as the pool stays above minReplicas.
-func (o *Orchestrator) scaleDownIdle() {
-	LockOrchestrator(o, "scaleDownIdle")
-	defer UnlockOrchestrator(o, "scaleDownIdle")
-
-	// Remove unlinked docker instances if exists
+// removeUnlinkedInstances removes unlinked docker instances if exists
+func (o *Orchestrator) removeUnlinkedInstances() {
+	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
 	if containers, err := o.getContainerList(ctx); err == nil {
+		cancel()
 		for _, c := range containers {
 			fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
 			containerID:=c.ID[:10]
@@ -366,7 +363,19 @@ func (o *Orchestrator) scaleDownIdle() {
 			}
 		}
 	}
+}
 
+}
+
+// scaleDownIdle removes instances that have been idle longer than IdleTimeout,
+// as long as the pool stays above minReplicas.
+func (o *Orchestrator) scaleDownIdle() {
+	LockOrchestrator(o, "scaleDownIdle")
+	defer UnlockOrchestrator(o, "scaleDownIdle")
+
+	// Remove unlinked docker instances if exists
+	o.removeUnlinkedInstances()
+	
 	for id, instance := range o.instances {
 		if instance.ActiveStreams > 0 {
 			continue
@@ -455,17 +464,9 @@ func (o *Orchestrator) Shutdown() {
 		slog.Info("Removing instance", "name", instance.Name, "host", instance.Host)
 		o.removeContainer(ctx, id)
 	}
+
 	// Remove unlinked docker instances if exists
-	if containers, err := o.getContainerList(ctx); err == nil {
-		for _, c := range containers {
-			fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
-			containerID:=c.ID[:10]
-			if _, ok := o.instances[containerID]; !ok {
-				ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
-				o.removeContainer(ctx, containerID)
-				cancel()
-			}
-		}
-	}
+	o.removeUnlinkedInstances()
+
 	slog.Info("Orchestrator shutdown complete")
 }
