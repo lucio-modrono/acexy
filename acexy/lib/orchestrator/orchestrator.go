@@ -70,15 +70,23 @@ type Orchestrator struct {
 }
 
 func LockOrchestrator(o *Orchestrator, message string) {
-	slog.Debug(message, " - Locking Orchestrator")
+	LockOrchestrator(o, message, true)
+}
+
+func LockOrchestrator(o *Orchestrator, message string, debug bool) {
+	if debug { slog.Debug(message, " - Locking Orchestrator") }
 	o.mutex.Lock()
-	slog.Debug(message, " - Orchestrator locked")
+	if debug { slog.Debug(message, " - Orchestrator locked") }
 }
 
 func UnlockOrchestrator(o *Orchestrator, message string) {
-	slog.Debug(message, " - Unlocking Orchestrator")
+	UnlockOrchestrator(o, message, true)
+}
+
+func UnlockOrchestrator(o *Orchestrator, message string, debug bool) {
+	if debug { slog.Debug(message, " - Unlocking Orchestrator") }
 	o.mutex.Unlock()
-	slog.Debug(message, " - Orchestrator unlocked")
+	if debug { slog.Debug(message, " - Orchestrator unlocked") }
 }
 
 func RLockOrchestrator(o *Orchestrator, message string) {
@@ -351,8 +359,8 @@ func (o *Orchestrator) ScaleDownLoop() {
 // scaleDownIdle removes instances that have been idle longer than IdleTimeout,
 // as long as the pool stays above minReplicas.
 func (o *Orchestrator) scaleDownIdle() {
-	LockOrchestrator(o, "scaleDownIdle")
-	defer UnlockOrchestrator(o, "scaleDownIdle")
+	LockOrchestrator(o, "scaleDownIdle", false)
+	defer UnlockOrchestrator(o, "scaleDownIdle", false)
 
 	for id, instance := range o.instances {
 		if instance.ActiveStreams > 0 {
