@@ -170,7 +170,9 @@ func (o *Orchestrator) getNotLinkedContainerList(ctx context.Context) ([]contain
 	f.Add("name", "acestream-")
 	f.Add("network", net)
 	f.Add("ancestor", o.image)
-	
+	f.Add("label", "com.docker.compose.project="+o.ComposeProject)
+	f.Add("label", "com.docker.compose.project.working_dir="+o.ComposeWorkingDir)
+
 	containers, err := o.dockerClient.ContainerList(ctx, container.ListOptions{
 		All:     true,
 		Filters: f,
