@@ -351,16 +351,19 @@ func (o *Orchestrator) ScaleDownLoop() {
 // scaleDownIdle removes instances that have been idle longer than IdleTimeout,
 // as long as the pool stays above minReplicas.
 func (o *Orchestrator) scaleDownIdle() {
-	LockOrchestrator(o, "scaleDownIdle", false)
-	defer UnlockOrchestrator(o, "scaleDownIdle", false)
+	LockOrchestrator(o, "scaleDownIdle")
+	defer UnlockOrchestrator(o, "scaleDownIdle")
 
 	// Remove unlinked docker instances if exists
-	containers, err := o.getContainerList(ctx)
-	for _, c := range containers {
-		fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
-		containerID:=c.ID[:10]
-		if _, ok := o.instances[containerID]; !ok {
-			o.removeContainer(ctx, containerID)
+	if containers, err := o.getContainerList(ctx); err == nil {
+		for _, c := range containers {
+			fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
+			containerID:=c.ID[:10]
+			if _, ok := o.instances[containerID]; !ok {
+				ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+				o.removeContainer(ctx, containerID)
+				cancel()
+			}
 		}
 	}
 
@@ -376,7 +379,7 @@ func (o *Orchestrator) scaleDownIdle() {
 		}
 		slog.Info("Scaling down idle instance", "name", instance.Name,
 			"idleSince", instance.LastActivity)
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
 		o.removeContainer(ctx, id)
 		cancel()
 	}
@@ -453,12 +456,15 @@ func (o *Orchestrator) Shutdown() {
 		o.removeContainer(ctx, id)
 	}
 	// Remove unlinked docker instances if exists
-	containers, err := o.getContainerList(ctx)
-	for _, c := range containers {
-		fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
-		containerID:=c.ID[:10]
-		if _, ok := o.instances[containerID]; !ok {
-			o.removeContainer(ctx, containerID)
+	if containers, err := o.getContainerList(ctx); err == nil {
+		for _, c := range containers {
+			fmt.Printf("ID: %s, Nombres: %v\n", c.ID[:10], c.Names)
+			containerID:=c.ID[:10]
+			if _, ok := o.instances[containerID]; !ok {
+				ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+				o.removeContainer(ctx, containerID)
+				cancel()
+			}
 		}
 	}
 	slog.Info("Orchestrator shutdown complete")
